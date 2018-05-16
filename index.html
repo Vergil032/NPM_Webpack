@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# NodePackageManager & Webpack
+
+---
+
+# Agenda
+
+1. NPM
+2. Lokal & Global
+3. Globales Installationsverzeichnis ändern
+4. Globale Packages installieren & auflisten
+5. Packages lokal installieren
+6. Lokale Packages deinstallieren
+7. Spezifische Version Installieren
+8. Packages Updaten
+9. Package suchen
+10. Cache & Aliases
+11. Webpack
+12. Webpack Komprimierung
+13. Module
+14. Loader
+15. DevServer
+
+---
+
+#1 NPM
+
+- Bei der Arbeit mit Node.js werden Packages benutzt.
+- Um die Nutzung zu erleichtern und übersichtlicher zu gestalten kann der NodePackageManager genutzt werden.
+- Der NPM kann Packages installieren und bietet eine nützliche Schnittstelle.
+ 
+---
+
+#2 Lokal & Global
+
+- NPM kann Packages im Lokalen oder Globalen Modus Installieren.
+- Im Lokalen Modus werden die Packages in dem node_modules Ordner des Arbeitsverzeichnisses Installiert.
+- Im Globalen Modus werden die Packages in /usr/lib/node_modules/ oder /usr/local/lib/node_modules/ Ordner Installiert.
+ - Da dies das Rootverzeichnis is, wird sudo zum Installieren von Globalen Packages benötigt.
+ - Um dieses Sicherheitsrisiko zu umgehen und Probleme bei Berechtigungen von Drittanbietern zu vermeiden, 
+ kann das Installationsverzeichnis geändert werden.
+
+---
+
+#3 Globales Installationsverzeichnis ändern
+
+- Durch den Befehl 
+```terminal
+$ npm config get prefix
+```
+
+	lässt sich das aktuelle Installationsverzeichnis ausgeben.
+- Um ein anderes Verzeichnis zu benutzen muss zunächst eins erstellt werden.
+```terminal
+$ cd ~ && mkdir .node_modules_global
+```
+
+- Hat man sich nun ein neues Verzeichnis erstellt, kann man dem NPM einen neuen prefix zuweisen.
+```terminal
+$ npm config set prefix=$HOME/.node_modules_global
+```
+
+
+---
+
+#3 Globales Installationsverzeichnis ändern
+
+- NPM ist noch im Rootverzeichnis installiert, deshalb muss dies nochmal im Nutzerverzeichnis installiert werden.
+```terminal
+$ npm install npm --global
+```
+
+- Um globale Packages aus dem Terminal zu benutzen, muss das Verzeichnis noch an die Umbegungsvariabeln
+angebunden werden.
+```terminal
+$ export PATH="$HOME/.node_modules_global/bin:$PATH"
+```
+---
+
+#4 Globale Packages installieren & auflisten
+
+- Um Packages global zu installieren ruft man den install Befehl mit dem Flag --global auf
+```terminal
+$ npm install uglify-js --global
+```
+
+- Mit dem list --global Befehl werden alle Packages angezeigt die global installiert wurden. 
+```terminal
+$ npm list --global
+```
+
+- Damit nicht alle Unterverzeichnisse angezeigt werden, kann man die Ausgabe mit dem depth Flag anpassen.
+```terminal
+$ npm list -g --depth=0
+```
+
+---
+
+#5 Packages lokal installieren
+
+- Zum installieren von lokalen Packages wird eine package.json Datei benötigt. Diese kann durch den init Befehl erstellt werden.
+```terminal
+$ npm init --y
+```
+ - Durch das --y Flag werden die Standardeinstellungen sofort übernommen.
+ 
+- Wenn eine JSON Datei erstellt wurde, können Packages mit install installiert werden.
+```terminal
+$ npm install underscore
+```
+
+---
+
+#5 Packages lokal installieren
+
+- Bei erfolgreicher Installation befinden sich neue dependencies in der JSON Datei.
+```json
+	{
+		...
+		"dependencies": {
+			"underscore": "^1.8.3"
+		}
+	}
+```
+ - Das ^ zeigt, dass bei der Installation die aktuellset version genutzt wurde.
+ 
+- Möchte man Packages für Testzwecke installieren kann man das --save-dev Flag benutzen. Dadurch werden die
+dependecies als devDependency installiert.
+
+- Um private Repositorys nicht ausversehen zu publizieren kann noch ein private: true in die JSOn geschrieben werden.
+
+---
+
+#6 Lokale Packages deinstallieren
+
+- Um lokale Packages wieder zu deinstallieren verwendet man den uninstall Befehl.
+```terminal
+$ npm uninstall underscore
+```
+
+---
+
+#7 Spezifische Version Installieren
+
+- Um eine Spezifische Version zu installieren kann man ein @ mit Versionsnummer anhängen.
+```terminal
+$ npm install underscore@1.8.2
+```
+
+---
+
+#8 Packages Updaten
+
+- Mit dem outdated Befehl lässt sich angucken, ob es neuere Versionen der Packages gibt.
+```terminal
+$ npm outdated
+```
+
+- Besitzt man eine veraltete Version kann diese mit update aktualisiert werden.
+```terminal
+$ npm update underscore
+```
+
+---
+
+#9 Package suchen
+
+- Wenn man einen Befehl benötigt, aber nicht weiß in welchem Package es sich befindet, kann man mit search
+alle packages nach dem Befehl absuchen.
+```terminal
+$ npm search mkdir
+NAME      | DESCRIPTION          | AUTHOR          | DATE       | VERSION
+mkdir     | Directory crea…      | =joehewitt      | 2012-04-17 | 0.0.2
+fs-extra  | fs-extra conta…      | =jprichardson…  | 2017-05-04 | 3.0.1
+mkdirp    | Recursively mkdir,…  | =substack       | 2015-05-14 | 0.5.1
+...
+```
+
+- Hat man den Befehl schon eingebaut kann man die fehlenden Packages durch install automatisch installieren lassen.
+```terminal
+$ npm install
+```
+
+---
+
+#10 Cache & Aliases
+
+- Nach einiger Zeit wird sich der Cache mit unbenutzten Packages füllen. Daher ist es 
+ratsam diesen gelegendlich zu säubern.
+```terminal
+$ npm cache clean
+```
+
+- Es gibt mehrere Möglichkeiten Befehle zu schreiben.
+```terminal
+npm i <package>		installiert locale Packages
+npm i -g <package>	 installiert globale Packages
+npm un <package>	   deinstalliert locale Packages
+npm up				 aktualisiert Packages
+npm t				  lässt Tests laufen
+npm ls				 zeigt alle installierten Packages auf
+```
+
+---
+
+#11 Webpack
+
+- Das Webpack wird verwendet um Javascript Dateien zu bündeln.
+
+- Die Installation lässt sich über das NPM ausführen.
+```terminal
+npm install --save-dev webpack webpack-cli
+```
+
+- Hat man ein Projekt, lässt sich dies mit 
+```terminal
+$ npm run develop
+```
+	bündeln.
+	
+---
+
+#12 Webpack Komprimierung
+	
+- Ist das Projekt fertig kann man es mit
+```terminal
+$ npm run build
+```
+	bündeln. Dadurch werden die Dateien über UglifyJS bestmöglich komprimiert.
+
+- Mit den Modi development und production lassen sich die komprimierungen auf 
+build speed oder execution speed optimieren.
+```terminal
+--mode development	schnelles Aufbauen und debuggen
+--mode production	 schnelle Ausführung und geringe Dateigröße
+```
+
+---
+
+# 13 Module
+
+- Webpack kennt von sichaus die Befehle import und export.
+- Durch die Installation von Modulen können noch weitere inzugefügt werden.
+- Ein Beispiel ist lodash-es welches die groupBy Funktion liefert.
+```terminal
+npm install --save-dev lodash-es
+```
+
+```javascript
+import { groupBy } from "lodash-es"
+import people from "./people"
+
+const managerGroups = groupBy(people, "manager")
+
+const root = document.createElement("div")
+root.innerHTML = `<pre>${JSON.stringify(managerGroups, null, 2)}</pre>`
+document.body.appendChild(root)
+```
+
+- Es wird auf der Seite eine Liste von Personen angezeigt die nach Manager 
+Sortiert sind, wenn das Projekt mit 'npm run develop' gebündelt wurde.
+- Durch 'npm run build' werden alle nicht benutzten lodash module entfernt. Dies 
+nennt man auch tree-shaking.
+
+---
+
+#14 Loader
+
+- Sass ist ein loader der es einem ermöglicht css Dateien als Modul zu importieren.
+```terminal
+npm install --save-dev style-loader css-loader sass-loader node-sass
+```
+- In der Configdatei muss angegeben werden, dass die loader sass-loader, css-loader und style-loader 
+genutzt werden.
+
+```javascript
++         use: [{
++           loader: 'style-loader'
++         }, {
++           loader: 'css-loader'
++         }, {
++           loader: 'sass-loader'
++         }]
+```
+---
+
+#14 Loader
+
+- Nach Neustart mit 'npm run develop' lassen sich nun css Dateien importieren.
+
+```javascript
+	import { groupBy } from 'lodash-es'
+	import people from './people'
+
++   import './style.scss'
+``` 
+---
+
+#14 loader
+
+- Ein weiterer loader ist der Fileloader, der es ermöglicht img Dateien zu importieren.
+```terminal
+npm install --save-dev file-loader
+```
+
+```javascript
++           {
++             loader: 'file-loader'
++           }
+```
+
+```javascript
+import codeURL from "./code.png"
+
+const img = document.createElement("img")
+img.src = codeURL
+document.body.appendChild(img)
+```
+
+---
+
+#15 DevServer
+
+- Der Webpack-dev-server ist ein simpler Webserver, bei dem Veränderungen 
+an den Dateien die Seite automatisch überarbeitet.
+
+```terminal
+npm install --save-dev webpack-dev-server
+```
+
+- In der package.json muss dann noch das webpack durch den webpack-dev-server ersetzt werden.
+
+```javascript
+    "scripts": {
+-     "develop": "webpack --watch --config webpack.dev.js",
++     "develop": "webpack-dev-server --config webpack.dev.js",
+    }
+```
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+        <script src="//remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript">
+      var hljs = remark.highlighter.engine;
+    </script>
+    <script src="terminal.language.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      var slideshow = remark.create({
+        highlightStyle: 'monokai'
+      });
+      // extract the embedded styling from ansi spans
+      var highlighted = document.querySelectorAll("code.terminal span.hljs-ansi");
+      Array.prototype.forEach.call(highlighted, function(next) {
+        next.insertAdjacentHTML("beforebegin", next.textContent);
+        next.parentNode.removeChild(next);
+      });
+    </script>
+  </body>
+</html>
